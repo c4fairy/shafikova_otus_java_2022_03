@@ -17,11 +17,10 @@ public class TestRunner {
     public static void testRun(String className) throws ClassNotFoundException {
         Class<?> clazz = Class.forName(className);
         Method testMethods[] = clazz.getDeclaredMethods();
-        Object object = ReflectionHelper.instantiate(clazz);
         Map<TestAnnotation, List<Method>> annotationMethodMap = getTestAnnotations(testMethods);
-        int a = processBefore(object, annotationMethodMap);
-        int b = processTest(object, annotationMethodMap);
-        int c = processAfter(object, annotationMethodMap);
+        int a = processBefore(clazz, annotationMethodMap);
+        int b = processTest(clazz, annotationMethodMap);
+        int c = processAfter(clazz, annotationMethodMap);
         int allA = annotationMethodMap.get(TestAnnotation.BEFORE).size();
         int allB = annotationMethodMap.get(TestAnnotation.TEST).size();
         int allC = annotationMethodMap.get(TestAnnotation.AFTER).size();
@@ -65,10 +64,11 @@ public class TestRunner {
         return annotationMethodMap;
     }
 
-    private static Integer processBefore(Object object, Map<TestAnnotation, List<Method>> methods) {
+    private static Integer processBefore(Class clazz, Map<TestAnnotation, List<Method>> methods) {
         int i = 0;
         for (int j = 0; j < methods.get(TestAnnotation.BEFORE).size(); j++) {
             try {
+                Object object = ReflectionHelper.instantiate(clazz);
                 methods.get(TestAnnotation.BEFORE).get(j).invoke(object);
                 i++;
             } catch (InvocationTargetException | IllegalAccessException e) {
@@ -78,10 +78,11 @@ public class TestRunner {
         return i;
     }
 
-    private static Integer processAfter(Object object, Map<TestAnnotation, List<Method>> methods) {
+    private static Integer processAfter(Class clazz, Map<TestAnnotation, List<Method>> methods) {
         int i = 0;
         for (int j = 0; j < methods.get(TestAnnotation.AFTER).size(); j++) {
             try {
+                Object object = ReflectionHelper.instantiate(clazz);
                 methods.get(TestAnnotation.AFTER).get(j).invoke(object);
                 i++;
             } catch (InvocationTargetException | IllegalAccessException e) {
@@ -91,10 +92,11 @@ public class TestRunner {
         return i;
     }
 
-    private static Integer processTest(Object object, Map<TestAnnotation, List<Method>> methods) {
+    private static Integer processTest(Class clazz, Map<TestAnnotation, List<Method>> methods) {
         int i = 0;
         for (int j = 0; j < methods.get(TestAnnotation.TEST).size(); j++) {
             try {
+                Object object = ReflectionHelper.instantiate(clazz);
                 methods.get(TestAnnotation.TEST).get(j).invoke(object);
                 i++;
             } catch (InvocationTargetException | IllegalAccessException e) {
