@@ -36,11 +36,6 @@ public class TestRunner {
 
     }
 
-    //!!!!для каждой такой "тройки" надо создать СВОЙ объект класса-теста.!!!!!
-
-    //Для каждой тройки! То есть instance подготавливается с помощью Before, выполняется тест,
-    // после корректно готовится к деструктору с помощью After. Я подробно это проговаривал на занятии
-
     private static Map<TestAnnotation, List<Method>> getTestAnnotations(Method[] testMethods) {
         Map<TestAnnotation, List<Method>> annotationMethodMap = new HashMap<>();
         List<Method> methodsBefore = new ArrayList<>();
