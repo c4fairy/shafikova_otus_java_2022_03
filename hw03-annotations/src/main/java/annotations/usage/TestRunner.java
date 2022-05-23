@@ -18,25 +18,28 @@ public class TestRunner {
         Class<?> clazz = Class.forName(className);
         Method testMethods[] = clazz.getDeclaredMethods();
         Map<TestAnnotation, List<Method>> annotationMethodMap = getTestAnnotations(testMethods);
-        int a = processBefore(clazz, annotationMethodMap);
-        int b = processTest(clazz, annotationMethodMap);
-        int c = processAfter(clazz, annotationMethodMap);
+        int [] count = processTest(clazz, annotationMethodMap);
         int allA = annotationMethodMap.get(TestAnnotation.BEFORE).size();
         int allB = annotationMethodMap.get(TestAnnotation.TEST).size();
         int allC = annotationMethodMap.get(TestAnnotation.AFTER).size();
-        System.out.println("All Before = " + allA);
-        System.out.println("Success Before = " + a);
-        System.out.println("Failed Before = " + (allA - a));
+        System.out.println("\nAll Before = " + allA);
+        System.out.println("Success Before = " + count[0]);
+        System.out.println("Failed Before = " + (allA - count[0]));
         System.out.println("========================================");
         System.out.println("All Test = " + allB);
-        System.out.println("Success Test = " + b);
-        System.out.println("Failed Test = " + (allB - b));
+        System.out.println("Success Test = " + count[1]);
+        System.out.println("Failed Test = " + (allB - count[1]));
         System.out.println("========================================");
         System.out.println("All After = " + allC);
-        System.out.println("Success After = " + c);
-        System.out.println("Failed After = " + (allC - c));
+        System.out.println("Success After = " + count[2]);
+        System.out.println("Failed After = " + (allC - count[2]));
 
     }
+
+    //!!!!для каждой такой "тройки" надо создать СВОЙ объект класса-теста.!!!!!
+
+    //Для каждой тройки! То есть instance подготавливается с помощью Before, выполняется тест,
+    // после корректно готовится к деструктору с помощью After. Я подробно это проговаривал на занятии
 
     private static Map<TestAnnotation, List<Method>> getTestAnnotations(Method[] testMethods) {
         Map<TestAnnotation, List<Method>> annotationMethodMap = new HashMap<>();
@@ -64,11 +67,27 @@ public class TestRunner {
         return annotationMethodMap;
     }
 
-    private static Integer processBefore(Class clazz, Map<TestAnnotation, List<Method>> methods) {
-        int i = 0;
-        for (int j = 0; j < methods.get(TestAnnotation.BEFORE).size(); j++) {
+    private static int[] processTest(Class clazz, Map<TestAnnotation, List<Method>> methods) {
+        int[] count = new int[3];
+        for (int j = 0; j < methods.get(TestAnnotation.TEST).size(); j++) {
             try {
                 Object object = ReflectionHelper.instantiate(clazz);
+                count[0] = processBefore(object, methods);
+                methods.get(TestAnnotation.TEST).get(j).invoke(object);
+                count[2] = processAfter(object, methods);
+                count[1]++;
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return count;
+    }
+
+    private static Integer processBefore(Object object, Map<TestAnnotation, List<Method>> methods) {
+        int i = 0;
+
+        for (int j = 0; j < methods.get(TestAnnotation.BEFORE).size(); j++) {
+            try {
                 methods.get(TestAnnotation.BEFORE).get(j).invoke(object);
                 i++;
             } catch (InvocationTargetException | IllegalAccessException e) {
@@ -78,11 +97,10 @@ public class TestRunner {
         return i;
     }
 
-    private static Integer processAfter(Class clazz, Map<TestAnnotation, List<Method>> methods) {
+    private static Integer processAfter(Object object, Map<TestAnnotation, List<Method>> methods) {
         int i = 0;
         for (int j = 0; j < methods.get(TestAnnotation.AFTER).size(); j++) {
             try {
-                Object object = ReflectionHelper.instantiate(clazz);
                 methods.get(TestAnnotation.AFTER).get(j).invoke(object);
                 i++;
             } catch (InvocationTargetException | IllegalAccessException e) {
@@ -92,17 +110,5 @@ public class TestRunner {
         return i;
     }
 
-    private static Integer processTest(Class clazz, Map<TestAnnotation, List<Method>> methods) {
-        int i = 0;
-        for (int j = 0; j < methods.get(TestAnnotation.TEST).size(); j++) {
-            try {
-                Object object = ReflectionHelper.instantiate(clazz);
-                methods.get(TestAnnotation.TEST).get(j).invoke(object);
-                i++;
-            } catch (InvocationTargetException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return i;
-    }
+
 }
