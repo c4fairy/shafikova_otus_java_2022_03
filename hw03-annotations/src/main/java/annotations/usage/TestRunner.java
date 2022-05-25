@@ -65,14 +65,16 @@ public class TestRunner {
     private static int[] processTest(Class clazz, Map<TestAnnotation, List<Method>> methods) {
         int[] count = new int[3];
         for (int j = 0; j < methods.get(TestAnnotation.TEST).size(); j++) {
+            Object object = ReflectionHelper.instantiate(clazz);
             try {
-                Object object = ReflectionHelper.instantiate(clazz);
                 count[0] = processBefore(object, methods);
                 methods.get(TestAnnotation.TEST).get(j).invoke(object);
-                count[2] = processAfter(object, methods);
                 count[1]++;
             } catch (InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
+            }
+            finally {
+                count[2] = processAfter(object, methods);
             }
         }
         return count;
